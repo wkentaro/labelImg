@@ -903,7 +903,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().showMessage('%s . Annotation will be saved to %s' %('Change saved folder', self.defaultSaveDir))
         self.statusBar().show()
 
-    def openAnnotation(self, _value=False):
+    def openAnnotation(self, _value=False, filename=None):
         if self.filename is None:
             return
 
@@ -914,8 +914,9 @@ class MainWindow(QMainWindow, WindowMixin):
                     for fmt in QImageReader.supportedImageFormats()]
             filters = "Open Annotation XML file (%s)" % \
                     ' '.join(formats + ['*.xml'])
-            filename = str(QFileDialog.getOpenFileName(self,
-                '%s - Choose a xml file' % __appname__, path, filters))
+            if filename is None:
+                filename = str(QFileDialog.getOpenFileName(self,
+                    '%s - Choose a xml file' % __appname__, path, filters))
             self.loadPascalXMLByFilename(filename)
 
     def openDir(self, _value=False):
@@ -980,6 +981,23 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if filename:
             self.loadFile(filename)
+
+        if self.filename is None or filename is None:
+            return
+
+        save_dir = os.path.dirname(filename)
+        suffix = os.path.splitext(os.path.basename(filename))[0]
+        ann_filename = os.path.join(save_dir, suffix + '.xml')
+        if os.path.exists(ann_filename):
+            self.openAnnotation(filename=ann_filename)
+            return
+
+        prev_filename = self.mImgList[currIndex]
+        save_dir = os.path.dirname(prev_filename)
+        suffix = os.path.splitext(os.path.basename(prev_filename))[0]
+        ann_filename = os.path.join(save_dir, suffix + '.xml')
+        if os.path.exists(ann_filename):
+            self.openAnnotation(filename=ann_filename)
 
     def openFile(self, _value=False):
         if not self.mayContinue():
